@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:background_location/background_location.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +22,19 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    startLocationService();
+    Timer.periodic(const Duration(seconds: 5), (timer) { 
+      print("inside timer function");
+      getCurrentLocation();
+    });
+
+  }
+
+
+  startLocationService() async
+  {
+    await BackgroundLocation.setAndroidConfiguration(1000);
+    await BackgroundLocation.startLocationService();
   }
 
   @override
@@ -101,9 +116,23 @@ class _MyAppState extends State<MyApp> {
   }
 
   getCurrentLocation() {
-    BackgroundLocation().getCurrentLocation().then((location) {
+    BackgroundLocation().getCurrentLocation().then((location) async {
+      print("inside getLocation Function");
       print("This is current Location" + location.longitude.toString());
       print("This is current Location" + location.latitude.toString());
+      print("time " + time.toString());
+
+       String currentServer =
+                          "https://safe-falls-49683.herokuapp.com";
+                      String url = '$currentServer/location/';
+                      var response = await http.post(url, body: {
+                        'latitude': location.latitude.toString(),
+                        'longitude': location.longitude.toString(),
+                        'time': DateTime.fromMillisecondsSinceEpoch(
+                                location.time.toInt())
+                            .toString(),
+                      });
+                      print(response.statusCode);
     });
   }
 
